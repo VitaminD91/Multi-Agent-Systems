@@ -1,38 +1,48 @@
+
+
 import java.util.Random;
+
+import Coursework10111_ontology.BatteryOntology;
+import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.MemoryOntology;
+import Coursework10111_ontology.ScreenOntology;
+import Coursework10111_ontology.StorageOntology;
 
 public class Assembler {
 
-	public Device getRandomDevice() {
+	public DeviceOntology getRandomDevice() {
 
-		
-		Device myDevice = new Device();
+		BatteryOntology battery;
+		ScreenOntology screen;
+		MemoryOntology memory;
+		StorageOntology storage;
 		
 		
 		if(Math.random() < 0.5) {
 			// Small smartphone
-			myDevice.screen = new Screen(5);
-			myDevice.battery = new Battery(2000);
+			screen = new ScreenOntology(5);
+			battery = new BatteryOntology(2000);
 		} else {
 			// phablet (okay boomer)
-			myDevice.screen = new Screen(7);
-			myDevice.battery = new Battery(3000);
+			screen = new ScreenOntology(7);
+			battery = new BatteryOntology(3000);
 		}
 		
 		if(Math.random() < 0.5) {
-			myDevice.memory = new Memory(4);
+			memory = new MemoryOntology(4);
 		}
 		else {
-			myDevice.memory = new Memory(8);
+			memory = new MemoryOntology(8);
 		}
 		
 		if(Math.random() < 0.5) {
-			myDevice.storage = new Storage(64);
+			storage = new StorageOntology(64);
 		}
 		else {
-			myDevice.storage = new Storage(256);
+			storage = new StorageOntology(256);
 		}
-		
-		System.out.println("screen: " + myDevice.screen + "  battery: " + myDevice.battery + " memory: " + myDevice.memory + " storage: " + myDevice.storage);
+				
+		DeviceOntology myDevice = new DeviceOntology(battery, screen, memory, storage);
 		
 		return myDevice;
 	}

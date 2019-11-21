@@ -1,10 +1,12 @@
+import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.OrderOntology;
 
 public class OrderHelpers {
 
-	public Order generateOrder() {
+	public OrderOntology generateOrder() {
 
 		Assembler assembler = new Assembler();
-		Device device = assembler.getRandomDevice();
+		DeviceOntology device = assembler.getRandomDevice();
 
 		// Quantity of Phones FLOOR(1 + 50 * rand)
 		int quantityOfPhones = (int) Math.floor(1 + 50 * Math.random());
@@ -17,8 +19,11 @@ public class OrderHelpers {
 
 		// Per-day penalty for late delivery quantity of phone * FLOOR (1 + 50 * rand)
 		double latePenalty = quantityOfPhones * Math.floor(1 + 50 * Math.random());
+		
+		int identificationNumber = 1;
 
-		Order order = new Order(quantityOfPhones, unitPrice, orderDueDays, latePenalty, device);
+		OrderOntology order = new OrderOntology(identificationNumber, quantityOfPhones, unitPrice, orderDueDays,
+				latePenalty, device);
 
 		System.out.println("Order Generated - ");
 		System.out.println("Device Spec: " + device);

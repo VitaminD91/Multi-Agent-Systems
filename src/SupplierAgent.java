@@ -1,7 +1,12 @@
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import Coursework10111_ontology.CommunicationsOntology;
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -27,6 +32,9 @@ import jade.lang.acl.MessageTemplate;
 //*******************************************//
 
 public class SupplierAgent extends Agent {
+	
+	private  Codec codec = new SLCodec();
+	private Ontology ontology = CommunicationsOntology.getInstance();
 
 	// CREATES A HASHMAP OF ORDERS FOR SALE
 	private HashMap<String, Float> componentsForSale = new HashMap<>();
@@ -38,6 +46,9 @@ public class SupplierAgent extends Agent {
 	//
 	@Override
 	protected void setup() {
+		
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
 		
 		System.out.println("Hello Agent "+getAID().getName()+" is ready.");
 

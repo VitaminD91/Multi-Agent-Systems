@@ -2,6 +2,10 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import Coursework10111_ontology.CommunicationsOntology;
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -63,9 +67,15 @@ public class ManufacturerAgent extends Agent {
 	private ArrayList<String> componentsToBuy = new ArrayList<>();
 	private AID tickerAgent;
 	private int numQueriesSent;
+	private  Codec codec = new SLCodec();
+	private Ontology ontology = CommunicationsOntology.getInstance();
 
 	@Override
 	protected void setup() {
+		// adds ontology and codec
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
 		// add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
