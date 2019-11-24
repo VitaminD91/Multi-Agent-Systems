@@ -12,20 +12,12 @@ public class DeviceOntology implements Concept{
 	ScreenOntology screen;
 	MemoryOntology memory;
 	StorageOntology storage;
-	private List<Component> components;
-	
-	@Slot(mandatory = true)
 	
 	
-	@AggregateSlot(cardMin = 4)
-	public List<Component> getComponents() {
-		return components;
+	public DeviceOntology() {
+		
 	}
-	
-	public void setComponents(List<Component> components) {
-		this.components = components;
-	}
-	
+
 	public DeviceOntology(BatteryOntology battery, ScreenOntology screen, MemoryOntology memory,
 			StorageOntology storage) {
 		
@@ -34,6 +26,42 @@ public class DeviceOntology implements Concept{
 		this.memory = memory;
 		this.storage = storage;
 		
+	}
+	
+	@Slot (mandatory = true)
+	public BatteryOntology getBattery() {
+		return battery;
+	}
+	
+	public void setBattery(BatteryOntology battery) {
+		this.battery = battery;
+	}
+	
+	@Slot (mandatory = true)
+	public ScreenOntology getScreen() {
+		return screen;
+	}
+	
+	public void setScreen(ScreenOntology screen) {
+		this.screen = screen;
+	}
+	
+	@Slot (mandatory = true)
+	public MemoryOntology getMemory() {
+		return memory;
+	}
+	
+	public void setMemory(MemoryOntology memory) {
+		this.memory = memory;
+	}
+	
+	@Slot (mandatory = true)
+	public StorageOntology getStorage() {
+		return storage;
+	}
+	
+	public void setStorage(StorageOntology storage) {
+		this.storage = storage;
 	}
 	
 	

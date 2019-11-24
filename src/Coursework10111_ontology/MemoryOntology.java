@@ -4,6 +4,10 @@ import jade.content.onto.annotations.Slot;
 public class MemoryOntology extends ComponentOntology{
 	public int capacity;
 	
+public MemoryOntology() {
+		
+	}
+	
 	@Slot (mandatory = true)
 	public int getCapacity() {
 		return capacity;

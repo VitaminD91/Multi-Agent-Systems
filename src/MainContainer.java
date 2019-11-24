@@ -9,9 +9,6 @@ public class MainContainer {
 
 	public static void main(String[] args){
 		
-		OrderHelpers ordermanager = new OrderHelpers();
-		ordermanager.generateOrder();
-		
 		Profile myProfile = new ProfileImpl();
 		Runtime myRuntime = Runtime.instance();
 		ContainerController myContainer = myRuntime.createMainContainer(myProfile);
@@ -21,14 +18,20 @@ public class MainContainer {
 			rma.start();
 			
 			String[] components = {};
-			AgentController supplierAgent = myContainer.createNewAgent("supplier", SupplierAgent.class.getCanonicalName(), components);
-			supplierAgent.start();
 			
 			AgentController manufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(), components);
 			manufacturerAgent.start();
 			
+			AgentController supplierAgent = myContainer.createNewAgent("supplier", SupplierAgent.class.getCanonicalName(), components);
+			supplierAgent.start();
+			
+			
+			
 			AgentController customerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(), components);
 			customerAgent.start();
+			
+			
+			
 			
 		}
 		catch(Exception e){

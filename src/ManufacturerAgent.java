@@ -3,9 +3,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import Coursework10111_ontology.CommunicationsOntology;
+import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.OrderOntology;
+import Coursework10111_ontology.Owns;
+import Coursework10111_ontology.Sell;
+import jade.content.Concept;
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -66,6 +75,8 @@ public class ManufacturerAgent extends Agent {
 	// Creates an array list of components to buy
 	private ArrayList<String> componentsToBuy = new ArrayList<>();
 	private AID tickerAgent;
+	private AID CustomerAgent;
+	private AID SupplierAgent;
 	private int numQueriesSent;
 	private  Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
@@ -75,6 +86,8 @@ public class ManufacturerAgent extends Agent {
 		// adds ontology and codec
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
+		
+		System.out.println("Hello Agent "+getAID().getName()+" is ready.");
 		
 		// add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -97,6 +110,10 @@ public class ManufacturerAgent extends Agent {
 		// componentsToBuy.add(storage.capacity * quantityOfPhones);
 
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new CollectOrders(this));
+		
+		
+		
 	}
 
 	@Override
@@ -155,7 +172,44 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			System.out.println("Collect Orders Action");
+			MessageTemplate rt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			MessageTemplate mt = MessageTemplate.MatchSender(CustomerAgent);
+			System.out.println(rt);
+			System.out.println(mt);
+			ACLMessage msg = receive(rt);
+			if(msg != null) {
+				try {
+					System.out.println("Message Received!");
+					ContentElement ce = null;
+					System.out.println(msg.getContent());
+					
+					// let JADE convert from String to Java objects
+					// Output will be a ContentElement
+					
+					ce = getContentManager().extractContent(msg);
+					System.out.println("ce instance of owns: " + (ce instanceof Owns));
+					if(ce instanceof Owns) {
+						OrderOntology order = ((Owns)ce).getOrder();
+						System.out.println(getName() + " received order: " + order);
+							
+						}
+					} catch(CodecException ce) {
+						ce.printStackTrace();
+					}
+				 catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			}
+			else {
+				block();
+			}
 		}
 	}
 

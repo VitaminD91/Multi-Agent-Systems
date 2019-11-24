@@ -11,6 +11,9 @@ public class OrderOntology implements Concept {
 	private double latePenalty;
 	private DeviceOntology device;
 
+	public OrderOntology(){
+		
+	}
 	
 	public OrderOntology(int identificationNumber, int quantityOfPhones, double unitPrice,
 			int orderDueDays, double latePenalty, DeviceOntology device) {
@@ -79,6 +82,14 @@ public class OrderOntology implements Concept {
 	public void setDevice(DeviceOntology device) {
 		this.device = device;
 	}
+	
+	 @Override public String toString() {
+		 return "| Order Number - " + identificationNumber + " | " + device +
+				 " | Quantity:" + quantityOfPhones + " Price:" + unitPrice + 
+				 "  Days Until Order Due:" + orderDueDays + 
+				 "  Cost per day late:" + latePenalty; 
+		 }
+
 	
 	
 	

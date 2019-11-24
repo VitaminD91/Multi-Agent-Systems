@@ -4,7 +4,7 @@ import jade.core.AID;
 
 public class Sell implements AgentAction {
 	private AID manufacturer;
-	private OrderOntology item;
+	private OrderOntology order;
 	
 	public AID getManufacturer() {
 		return manufacturer;
@@ -14,12 +14,12 @@ public class Sell implements AgentAction {
 		this.manufacturer = manufacturer;
 	}
 	
-	public OrderOntology getItem() {
-		return item;
+	public OrderOntology getOrder() {
+		return order;
 	}
 	
-	public void setItem(OrderOntology item) {
-		this.item = item;
+	public void setOrder(OrderOntology order) {
+		this.order = order;
 	}	
 	
 }

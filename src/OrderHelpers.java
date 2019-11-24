@@ -24,13 +24,13 @@ public class OrderHelpers {
 
 		OrderOntology order = new OrderOntology(identificationNumber, quantityOfPhones, unitPrice, orderDueDays,
 				latePenalty, device);
-
+		System.out.println("                                       ");
 		System.out.println("Order Generated - ");
-		System.out.println("Device Spec: " + device);
 		System.out.println("Quantity of phones: " + quantityOfPhones);
 		System.out.println("Price per Unit: " + unitPrice);
 		System.out.println("Days until order due: " + orderDueDays);
 		System.out.println("Penalty per day late: " + latePenalty);
+		System.out.println("                                       ");
 
 		return order;
 

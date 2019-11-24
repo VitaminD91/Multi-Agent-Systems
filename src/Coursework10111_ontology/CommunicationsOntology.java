@@ -21,5 +21,10 @@ public class CommunicationsOntology extends BeanOntology {
 			e.printStackTrace();
 		}
 	}
+	
+	 @Override public String toString() {
+		 return " " + theInstance; 
+		 }
+
 
 }

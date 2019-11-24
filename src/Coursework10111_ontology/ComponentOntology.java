@@ -7,7 +7,7 @@ public class ComponentOntology implements Concept {
 	private int deliveryTime;
 	private String name;
 	
-	@Slot(mandatory = true)
+	
 	public float getPrice() {
 		return price;
 	}
@@ -16,7 +16,7 @@ public class ComponentOntology implements Concept {
 		this.price = price;
 	}
 	
-	@Slot(mandatory = true)
+
 	public int getDeliveryTime() {
 		return deliveryTime;
 	}
@@ -25,7 +25,7 @@ public class ComponentOntology implements Concept {
 		this.deliveryTime = deliveryTime;
 	}
 	
-	@Slot(mandatory = true)
+	
 	public String getName() {
 		return name;
 	}

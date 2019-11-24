@@ -4,6 +4,11 @@ import jade.content.onto.annotations.Slot;
 public class ScreenOntology extends ComponentOntology{
 	
 	private int size;
+	
+	public ScreenOntology() {
+		
+	}
+	
 	@Slot (mandatory = true)
 	public int getSize() {
 		return size;

@@ -5,6 +5,10 @@ public class BatteryOntology extends ComponentOntology{
 	
 	private int capacity;
 	
+	public BatteryOntology() {
+		
+	}
+	
 	@Slot (mandatory = true)
 	public int getCapacity() {
 		return capacity;

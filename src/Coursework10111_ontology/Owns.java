@@ -4,8 +4,6 @@ import jade.content.Predicate;
 import jade.core.AID;
 
 public class Owns implements Predicate {
-	private AID supplier;
-	private AID customer;
 	private AID manufacturer;
 	private OrderOntology order;
 	
@@ -15,14 +13,6 @@ public class Owns implements Predicate {
 	
 	public void setManufacturer(AID manufacturer) {
 		this.manufacturer = manufacturer;
-	}
-	
-	public AID getCustomer() {
-		return customer;
-	}
-	
-	public void setCustomer(AID customer) {
-		this.customer = customer;
 	}
 	
 	public OrderOntology getOrder() {
