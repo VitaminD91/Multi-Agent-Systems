@@ -4,9 +4,10 @@ import java.util.HashMap;
 
 import Coursework10111_ontology.CommunicationsOntology;
 import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.ManufacturerOwns;
 import Coursework10111_ontology.OrderOntology;
-import Coursework10111_ontology.Owns;
 import Coursework10111_ontology.Sell;
+import Coursework10111_ontology.SupplierOwns;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -70,15 +71,18 @@ import jade.lang.acl.MessageTemplate;
 
 public class ManufacturerAgent extends Agent {
 
+	public static String AGENT_TYPE = "Manufacturer";
+
 	// Creates and array list of agent IDs for suppliers
 	private ArrayList<AID> suppliers = new ArrayList<>();
 	// Creates an array list of components to buy
 	private ArrayList<String> componentsToBuy = new ArrayList<>();
 	private AID tickerAgent;
 	private AID CustomerAgent;
-	private AID SupplierAgent;
+	private AID SupplierAID;
 	private int numQueriesSent;
-	private  Codec codec = new SLCodec();
+	private OrderOntology collectedOrder; // should be a list
+	private Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
 
 	@Override
@@ -86,14 +90,15 @@ public class ManufacturerAgent extends Agent {
 		// adds ontology and codec
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		
-		System.out.println("Hello Agent "+getAID().getName()+" is ready.");
-		
+		SupplierAID = new AID("supplier", AID.ISLOCALNAME);
+
+		System.out.println("Hello Agent " + getAID().getName() + " is ready.");
+
 		// add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Manufacturer");
+		sd.setType(AGENT_TYPE);
 		sd.setName(getLocalName() + "-manufacturer-agent");
 		dfd.addServices(sd);
 		try {
@@ -111,9 +116,8 @@ public class ManufacturerAgent extends Agent {
 
 		addBehaviour(new TickerWaiter(this));
 		addBehaviour(new CollectOrders(this));
-		
-		
-		
+		addBehaviour(new FindSuppliers(this));
+		addBehaviour(new SendComponentOrder(this));
 	}
 
 	@Override
@@ -172,42 +176,35 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			System.out.println("Collect Orders Action");
-			MessageTemplate rt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-			MessageTemplate mt = MessageTemplate.MatchSender(CustomerAgent);
-			System.out.println(rt);
-			System.out.println(mt);
-			ACLMessage msg = receive(rt);
-			if(msg != null) {
+
+			/*
+			 * try { Thread.sleep(2000); } catch (InterruptedException e) { // TODO
+			 * Auto-generated catch block e.printStackTrace(); }
+			 */
+
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			ACLMessage msg = receive(mt);
+			if (msg != null) {
 				try {
 					System.out.println("Message Received!");
 					ContentElement ce = null;
-					System.out.println(msg.getContent());
-					
+
 					// let JADE convert from String to Java objects
 					// Output will be a ContentElement
-					
+
 					ce = getContentManager().extractContent(msg);
-					System.out.println("ce instance of owns: " + (ce instanceof Owns));
-					if(ce instanceof Owns) {
-						OrderOntology order = ((Owns)ce).getOrder();
+					if (ce instanceof ManufacturerOwns) {
+						OrderOntology order = ((ManufacturerOwns) ce).getOrder();
 						System.out.println(getName() + " received order: " + order);
-							
-						}
-					} catch(CodecException ce) {
-						ce.printStackTrace();
+						collectedOrder = order;
+
 					}
-				 catch (OntologyException oe) {
+				} catch (CodecException ce) {
+					ce.printStackTrace();
+				} catch (OntologyException oe) {
 					oe.printStackTrace();
 				}
-			}
-			else {
+			} else {
 				block();
 			}
 		}
@@ -243,13 +240,12 @@ public class ManufacturerAgent extends Agent {
 				for (int i = 0; i < agentsType1.length; i++) {
 					suppliers.add(agentsType1[i].getName());
 				}
-			}
-			catch (FIPAException e) {
+			} catch (FIPAException e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 	public class SendComponentOrder extends OneShotBehaviour {
 
 		public SendComponentOrder(Agent a) {
@@ -258,18 +254,28 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			//send out a call for components
-			numQueriesSent = 0;
-			for(String componentName : componentsToBuy) {
-				ACLMessage enquiry = new ACLMessage(ACLMessage.CFP);
-				enquiry.setContent(componentName);
-				enquiry.setConversationId(componentName);
-				for (AID supplier : suppliers) {
-					enquiry.addReceiver(supplier);
-					numQueriesSent++;
+
+			if (collectedOrder != null) {
+				ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
+				enquiry.addReceiver(SupplierAID);
+				enquiry.setLanguage(codec.getName());
+				enquiry.setOntology("my_ontology");
+
+				SupplierOwns owns = new SupplierOwns();
+				owns.setSupplier(SupplierAID);
+				owns.setManufacturerOrder(collectedOrder);
+				try {
+
+					System.out.println("ERROR HANDLING: " + enquiry);
+					getContentManager().fillContent(enquiry, owns);
+					send(enquiry);
+				} catch (CodecException ce) {
+					ce.printStackTrace();
+				} catch (OntologyException oe) {
+					oe.printStackTrace();
 				}
-				myAgent.send(enquiry);
 			}
+
 		}
 	}
 
@@ -297,5 +303,3 @@ public class ManufacturerAgent extends Agent {
 	}
 
 }
-
-

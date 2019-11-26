@@ -3,7 +3,7 @@ package Coursework10111_ontology;
 import jade.content.Predicate;
 import jade.core.AID;
 
-public class Owns implements Predicate {
+public class ManufacturerOwns implements Predicate {
 	private AID manufacturer;
 	private OrderOntology order;
 	

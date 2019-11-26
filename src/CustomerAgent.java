@@ -3,10 +3,11 @@ import jade.core.Agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import Coursework10111_ontology.CommunicationsOntology;
 import Coursework10111_ontology.OrderOntology;
-import Coursework10111_ontology.Owns;
+import Coursework10111_ontology.ManufacturerOwns;
 import jade.content.abs.AbsContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -19,6 +20,7 @@ import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -33,18 +35,24 @@ import jade.lang.acl.MessageTemplate;
 // takeDown on completed order
 
 public class CustomerAgent extends Agent {
+
+	public static String AGENT_TYPE = "Customer";
+
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
 	private AID manufacturerAID;
+	private AID tickerAgent;
 
 	protected void setup() {
+
+		System.out.println("Customer Agent Setup");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		manufacturerAID = new AID("manufacturer", AID.ISLOCALNAME);
-		addBehaviour(new GenerateOrder());
-		/* addBehaviour(new SendOrder()); */
+		addBehaviour(new TickerWaiter(this));
 		
-		System.out.println("Hello Agent "+getAID().getName()+" is ready.");
+
+		System.out.println("Hello Agent " + getAID().getName() + " is ready.");
 
 		// add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -61,10 +69,49 @@ public class CustomerAgent extends Agent {
 
 	}
 
+	public class TickerWaiter extends CyclicBehaviour {
+
+		// behaviour to wait for new day
+		public TickerWaiter(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			//System.out.println("Customer Ticker Waiter");
+			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
+					MessageTemplate.MatchContent("terminate"));
+			ACLMessage msg = myAgent.receive(mt);
+
+			//System.out.println("msg: " + msg);
+			if (msg != null) {
+				System.out.println("ticker agent: " + tickerAgent);
+				if (tickerAgent == null) {
+					tickerAgent = msg.getSender();
+
+					if (msg.getContent().equals("new day")) {
+						// spawn new sequential behaviour for day's activities
+						SequentialBehaviour dailyActivity = new SequentialBehaviour();
+						// sub-behaviours will execute in the order they are added
+						dailyActivity.addSubBehaviour(new GenerateOrder());
+						dailyActivity.addSubBehaviour(new EndDayListener(myAgent, this));
+						myAgent.addBehaviour(dailyActivity);
+					} else {
+						// Terminate message to end simulation
+						myAgent.doDelete();
+					}
+				} else {
+					block();
+				}
+			}
+		}
+	}
+
 	class GenerateOrder extends OneShotBehaviour {
 
 		@Override
 		public void action() {
+			System.out.println("Customer Agent GenerateOrder");
 
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 			enquiry.addReceiver(manufacturerAID);
@@ -75,14 +122,15 @@ public class CustomerAgent extends Agent {
 			OrderHelpers ordermanager = new OrderHelpers();
 			OrderOntology order = ordermanager.generateOrder();
 			System.out.println(getName() + " created order: " + order);
-			
-			Owns owns = new Owns();
+
+			ManufacturerOwns owns = new ManufacturerOwns();
 			owns.setManufacturer(manufacturerAID);
 			owns.setOrder(order);
 			try {
 				// Let JADE convert from Java objects to string
 				getContentManager().fillContent(enquiry, owns);
 				send(enquiry);
+
 			} catch (CodecException ce) {
 				ce.printStackTrace();
 			} catch (OntologyException oe) {
@@ -92,24 +140,31 @@ public class CustomerAgent extends Agent {
 		}
 	}
 
-	/*
-	 * class SendOrder extends OneShotBehaviour {
-	 * 
-	 * 
-	 * @Override public void action() { // prepare the action request message
-	 * ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-	 * msg.addReceiver(manufacturerAID); msg.setLanguage(codec.getName());
-	 * msg.setOntology(getName()); // prepare the content
-	 * 
-	 * 
-	 * Action enquiry = new Action(); enquiry.setAction(enquiry);
-	 * enquiry.setActor(manufacturerAID); try { // let JADE convert from java
-	 * objexts to string getContentManager().fillContent(msg, enquiry); // send the
-	 * wrapper object send(msg); } catch (CodecException ce) { ce.printStackTrace();
-	 * } catch (OntologyException oe) { oe.printStackTrace(); }
-	 * 
-	 * } }
-	 */
+	public class EndDayListener extends CyclicBehaviour {
+		private Behaviour toRemove;
+
+		public EndDayListener(Agent a, Behaviour toRemove) {
+			super(a);
+			this.toRemove = toRemove;
+		}
+
+		@Override
+		public void action() {
+			System.out.println("Customer Agent EndDayListener");
+			MessageTemplate mt = MessageTemplate.MatchContent("done");
+
+			// Order is finished
+			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+			tick.setContent("done");
+			tick.addReceiver(tickerAgent);
+			myAgent.send(tick);
+			// remove behaviours
+			
+			myAgent.removeBehaviour(toRemove);
+
+			myAgent.removeBehaviour(this);
+		}
+	}
 
 	protected void takeDown() {
 

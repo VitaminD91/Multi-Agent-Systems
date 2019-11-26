@@ -11,11 +11,12 @@
 	import jade.lang.acl.ACLMessage;
 	import jade.lang.acl.MessageTemplate;
 
-	public class ManufacturerCustomerTicker extends Agent {
+	public class SyncTicker extends Agent {
 		public static final int NUM_DAYS = 100;
 
 		@Override
 		protected void setup() {
+			System.out.println("setup");
 			// add this agent to the yellow pages
 			DFAgentDescription dfd = new DFAgentDescription();
 			dfd.setName(getAID());
@@ -55,6 +56,7 @@
 
 			@Override
 			public void action() {
+				System.out.println("Sync Agents Action");
 				switch (step) {
 					case 0:
 						sendNewDayToAgents();
@@ -66,6 +68,7 @@
 			}
 
 			private void waitForDoneAgents() {
+				System.out.println("wait for done");
 				// wait to receive a "done" message from all agents
 				MessageTemplate mt = MessageTemplate.MatchContent("done");
 				ACLMessage msg = myAgent.receive(mt);
@@ -80,23 +83,33 @@
 			}
 
 			private void sendNewDayToAgents() {
+				System.out.println("send new day");
+				System.out.println("Start of Day " + (day+1));
 				// find all agents using dictionary service
-				DFAgentDescription template1 = new DFAgentDescription();
+				DFAgentDescription manufacturerTemplate = new DFAgentDescription();
 				ServiceDescription sd = new ServiceDescription();
-				sd.setType("buyer");
-				template1.addServices(sd);
-				DFAgentDescription template2 = new DFAgentDescription();
+				sd.setType(ManufacturerAgent.AGENT_TYPE);
+				manufacturerTemplate.addServices(sd);
+				DFAgentDescription supplierTemplate = new DFAgentDescription();
 				ServiceDescription sd2 = new ServiceDescription();
-				sd2.setType("seller");
-				template2.addServices(sd2);
+				sd2.setType(SupplierAgent.AGENT_TYPE);
+				supplierTemplate.addServices(sd2);
+				DFAgentDescription customerTemplate = new DFAgentDescription();
+				ServiceDescription sd3 = new ServiceDescription();
+				sd3.setType(CustomerAgent.AGENT_TYPE);
+				customerTemplate.addServices(sd3);
 				try {
-					DFAgentDescription[] agentsType1 = DFService.search(myAgent, template1);
-					for (int i = 0; i < agentsType1.length; i++) {
-						simulationAgents.add(agentsType1[1].getName()); // this is the AID
+					DFAgentDescription[] manufacturerAgents = DFService.search(myAgent, manufacturerTemplate);
+					for (int i = 0; i < manufacturerAgents.length; i++) {
+						simulationAgents.add(manufacturerAgents[i].getName()); // this is the AID
 					}
-					DFAgentDescription[] agentsType2 = DFService.search(myAgent, template2);
-					for (int i = 0; i < agentsType2.length; i++) {
-						simulationAgents.add(agentsType2[i].getName()); // this is the AID
+					DFAgentDescription[] supplierAgents = DFService.search(myAgent, supplierTemplate);
+					for (int i = 0; i < supplierAgents.length; i++) {
+						simulationAgents.add(supplierAgents[i].getName()); // this is the AID
+					}
+					DFAgentDescription[] customerAgents = DFService.search(myAgent, customerTemplate);
+					for (int i = 0; i < customerAgents.length; i++) {
+						simulationAgents.add(customerAgents[i].getName());
 					}
 				} catch (FIPAException e) {
 					e.printStackTrace();
@@ -127,6 +140,7 @@
 
 			@Override
 			public int onEnd() {
+				System.out.println("send end of day");
 				System.out.println("End of day " + day);
 				if (day == NUM_DAYS) {
 					// send termination message to each agent

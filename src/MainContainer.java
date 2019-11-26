@@ -23,12 +23,16 @@ public class MainContainer {
 			manufacturerAgent.start();
 			
 			AgentController supplierAgent = myContainer.createNewAgent("supplier", SupplierAgent.class.getCanonicalName(), components);
-			supplierAgent.start();
+			supplierAgent.start(); 
 			
 			
 			
 			AgentController customerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(), components);
 			customerAgent.start();
+
+			AgentController syncTicker = myContainer.createNewAgent("sync", SyncTicker.class.getCanonicalName(), null);
+			syncTicker.start();
+			
 			
 			
 			
