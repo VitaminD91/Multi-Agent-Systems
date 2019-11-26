@@ -44,6 +44,7 @@ public class CustomerAgent extends Agent {
 	private AID tickerAgent;
 
 	protected void setup() {
+		System.out.println(this.getClass().getCanonicalName() + ": " + "created");
 
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
@@ -81,13 +82,12 @@ public class CustomerAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
 					MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt);
-
-			//System.out.println("msg: " + msg);
 			if (msg != null) {
 				if (tickerAgent == null) {
 					tickerAgent = msg.getSender();
-					System.out.println("ticker agent: " + tickerAgent);
+				}
 					if (msg.getContent().equals("new day")) {
+						System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
 						// spawn new sequential behaviour for day's activities
 						SequentialBehaviour dailyActivity = new SequentialBehaviour();
 						// sub-behaviours will execute in the order they are added
@@ -104,7 +104,6 @@ public class CustomerAgent extends Agent {
 				}
 			}
 		}
-	}
 
 	class GenerateOrder extends OneShotBehaviour {
 
@@ -159,7 +158,7 @@ public class CustomerAgent extends Agent {
 			myAgent.send(tick);
 			// remove behaviours
 			
-			myAgent.removeBehaviour(toRemove);
+			/* myAgent.removeBehaviour(toRemove); */
 
 			myAgent.removeBehaviour(this);
 		}

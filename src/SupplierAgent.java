@@ -122,7 +122,7 @@ public class SupplierAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				try {
-					System.out.println("supplier received message!");
+					System.out.println(this.getClass().getCanonicalName() + ": " + "Received Order");
 					ContentElement ce = null;
 
 					// let JADE convert from String to Java objects
@@ -131,8 +131,7 @@ public class SupplierAgent extends Agent {
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof SupplierOwns) {
 						OrderOntology order = ((SupplierOwns) ce).getManufacturerOrder();
-						System.out
-								.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
+						System.out.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
 						DeviceOntology device = order.getDevice();
 						int quantity = order.getIdentificationNumber();
 						BatteryOntology requiredBattery = device.getBattery();
@@ -174,7 +173,7 @@ public class SupplierAgent extends Agent {
 				myAgent.send(tick);
 				// remove behaviours
 
-				myAgent.removeBehaviour(toRemove);
+				/* myAgent.removeBehaviour(toRemove); */
 
 				myAgent.removeBehaviour(this);
 			}
@@ -198,6 +197,8 @@ public class SupplierAgent extends Agent {
 					tickerAgent = msg.getSender();
 				}
 				if (msg.getContent().equals("new day")) {
+					System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
+					
 					myAgent.addBehaviour(new FindManufacturer(myAgent));
 					CyclicBehaviour os = new ReceiveOrder(myAgent);
 					myAgent.addBehaviour(os);

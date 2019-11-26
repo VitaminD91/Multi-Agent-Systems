@@ -88,6 +88,7 @@ public class ManufacturerAgent extends Agent {
 	@Override
 	protected void setup() {
 		// adds ontology and codec
+		System.out.println(this.getClass().getCanonicalName() + ": " + "created");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		SupplierAID = new AID("supplier", AID.ISLOCALNAME);
@@ -142,8 +143,9 @@ public class ManufacturerAgent extends Agent {
 			if (msg != null) {
 				if (tickerAgent == null) {
 					tickerAgent = msg.getSender();
-
+				}
 					if (msg.getContent().equals("new day")) {
+						System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
 						// spawn new sequential behaviour for day's activities
 						SequentialBehaviour dailyActivity = new SequentialBehaviour();
 						// sub-behaviours will execute in the order they are added
@@ -162,7 +164,7 @@ public class ManufacturerAgent extends Agent {
 				}
 			}
 		}
-	}
+	
 
 	public class CollectOrders extends OneShotBehaviour {
 
