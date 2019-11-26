@@ -115,9 +115,6 @@ public class ManufacturerAgent extends Agent {
 		// componentsToBuy.add(storage.capacity * quantityOfPhones);
 
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new CollectOrders(this));
-		addBehaviour(new FindSuppliers(this));
-		addBehaviour(new SendComponentOrder(this));
 	}
 
 	@Override
@@ -171,16 +168,18 @@ public class ManufacturerAgent extends Agent {
 
 		public CollectOrders(Agent a) {
 			super(a);
-			System.out.println("Collect Orders Constructor");
+
 		}
 
 		@Override
 		public void action() {
-
-			/*
-			 * try { Thread.sleep(2000); } catch (InterruptedException e) { // TODO
-			 * Auto-generated catch block e.printStackTrace(); }
-			 */
+			System.out.println("Collect Orders Constructor");
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 			ACLMessage msg = receive(mt);
@@ -266,7 +265,6 @@ public class ManufacturerAgent extends Agent {
 				owns.setManufacturerOrder(collectedOrder);
 				try {
 
-					System.out.println("ERROR HANDLING: " + enquiry);
 					getContentManager().fillContent(enquiry, owns);
 					send(enquiry);
 				} catch (CodecException ce) {

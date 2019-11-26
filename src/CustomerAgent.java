@@ -45,7 +45,6 @@ public class CustomerAgent extends Agent {
 
 	protected void setup() {
 
-		System.out.println("Customer Agent Setup");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		manufacturerAID = new AID("manufacturer", AID.ISLOCALNAME);
@@ -85,14 +84,14 @@ public class CustomerAgent extends Agent {
 
 			//System.out.println("msg: " + msg);
 			if (msg != null) {
-				System.out.println("ticker agent: " + tickerAgent);
 				if (tickerAgent == null) {
 					tickerAgent = msg.getSender();
-
+					System.out.println("ticker agent: " + tickerAgent);
 					if (msg.getContent().equals("new day")) {
 						// spawn new sequential behaviour for day's activities
 						SequentialBehaviour dailyActivity = new SequentialBehaviour();
 						// sub-behaviours will execute in the order they are added
+	
 						dailyActivity.addSubBehaviour(new GenerateOrder());
 						dailyActivity.addSubBehaviour(new EndDayListener(myAgent, this));
 						myAgent.addBehaviour(dailyActivity);
@@ -140,7 +139,7 @@ public class CustomerAgent extends Agent {
 		}
 	}
 
-	public class EndDayListener extends CyclicBehaviour {
+	public class EndDayListener extends OneShotBehaviour {
 		private Behaviour toRemove;
 
 		public EndDayListener(Agent a, Behaviour toRemove) {

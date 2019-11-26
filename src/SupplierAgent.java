@@ -29,7 +29,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-
 //***********WHAT I WANT THIS TO DO************//
 
 // Receives request for parts from Manufacturer
@@ -43,7 +42,7 @@ import jade.lang.acl.MessageTemplate;
 //*******************************************//
 
 public class SupplierAgent extends Agent {
-	
+
 	public static String AGENT_TYPE = "Supplier";
 
 	private Codec codec = new SLCodec();
@@ -55,7 +54,7 @@ public class SupplierAgent extends Agent {
 	private AID tickerAgent;
 	private AID ManufacturerAID;
 
-	//
+	//i DON'T LIKE THIS
 	@Override
 	protected void setup() {
 
@@ -77,12 +76,8 @@ public class SupplierAgent extends Agent {
 			e.printStackTrace();
 		}
 
-		// add components for sale
-		componentsForSale.put(2000, 0f);
-
 		addBehaviour(new TickerWaiter(this));
-		
-	
+
 	}
 
 	public class FindManufacturer extends OneShotBehaviour {
@@ -136,18 +131,15 @@ public class SupplierAgent extends Agent {
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof SupplierOwns) {
 						OrderOntology order = ((SupplierOwns) ce).getManufacturerOrder();
-						System.out.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
+						System.out
+								.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
 						DeviceOntology device = order.getDevice();
 						int quantity = order.getIdentificationNumber();
 						BatteryOntology requiredBattery = device.getBattery();
 						ScreenOntology requiredScreen = device.getScreen();
 						StorageOntology requiredStorage = device.getStorage();
 						MemoryOntology requiredMemory = device.getMemory();
-						
-						
-						
-						
-						
+
 					}
 
 				} catch (CodecException ce) {
@@ -160,20 +152,10 @@ public class SupplierAgent extends Agent {
 		}
 	}
 
-	/*
-	 * public class PurchaseOrdersServer extends CyclicBehaviour { public void
-	 * action() { MessageTemplate mt =
-	 * MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL); ACLMessage msg
-	 * = myAgent.receive(mt); if (msg != null) { // ACCEPT_PROPOSAL message
-	 * received. Process it ACLMessage reply = msg.createReply();
-	 * reply.setPerformative(ACLMessage.INFORM); } } }
-	 */
 
 	public class EndDayListener extends CyclicBehaviour {
-		
-		 private Behaviour toRemove;
-		 
-		
+
+		private Behaviour toRemove;
 
 		public EndDayListener(Agent a, Behaviour toRemove) {
 			super(a);
@@ -183,16 +165,19 @@ public class SupplierAgent extends Agent {
 		@Override
 		public void action() {
 			MessageTemplate mt = MessageTemplate.MatchContent("done");
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
 				// Order is finished
-			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
-			tick.setContent("done");
-			tick.addReceiver(tickerAgent);
-			myAgent.send(tick);
-			// remove behaviours
-			
-			myAgent.removeBehaviour(toRemove);
-			
-			myAgent.removeBehaviour(this);
+				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
+				tick.setContent("done");
+				tick.addReceiver(tickerAgent);
+				myAgent.send(tick);
+				// remove behaviours
+
+				myAgent.removeBehaviour(toRemove);
+
+				myAgent.removeBehaviour(this);
+			}
 		}
 	}
 

@@ -140,7 +140,6 @@
 
 			@Override
 			public int onEnd() {
-				System.out.println("send end of day");
 				System.out.println("End of day " + day);
 				if (day == NUM_DAYS) {
 					// send termination message to each agent
