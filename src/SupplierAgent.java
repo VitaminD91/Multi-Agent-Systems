@@ -5,12 +5,14 @@ import java.util.List;
 
 import Coursework10111_ontology.BatteryOntology;
 import Coursework10111_ontology.CommunicationsOntology;
+import Coursework10111_ontology.ComponentOntology;
 import Coursework10111_ontology.DeviceOntology;
 import Coursework10111_ontology.MemoryOntology;
 import Coursework10111_ontology.OrderOntology;
 import Coursework10111_ontology.ScreenOntology;
 import Coursework10111_ontology.StorageOntology;
 import Coursework10111_ontology.SupplierOwns;
+import Coursework10111_ontology.SupplierResponseOwns;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -49,7 +51,7 @@ public class SupplierAgent extends Agent {
 	private Ontology ontology = CommunicationsOntology.getInstance();
 
 	// CREATES A HASHMAP OF ORDERS FOR SALE
-	private HashMap<Integer, Float> componentsForSale = new HashMap<>();
+	private HashMap<AID, List<ComponentOntology>> orderToProcess = new HashMap<>();
 	// REFERENCES TICKER AGENT ID
 	private AID tickerAgent;
 	private AID ManufacturerAID;
@@ -131,14 +133,38 @@ public class SupplierAgent extends Agent {
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof SupplierOwns) {
 						OrderOntology order = ((SupplierOwns) ce).getManufacturerOrder();
+						int quantity = order.getQuantityOfPhones();
 						System.out.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
 						DeviceOntology device = order.getDevice();
-						int quantity = order.getIdentificationNumber();
 						BatteryOntology requiredBattery = device.getBattery();
 						ScreenOntology requiredScreen = device.getScreen();
 						StorageOntology requiredStorage = device.getStorage();
 						MemoryOntology requiredMemory = device.getMemory();
+						
+						List<ComponentOntology> componentOrder = new ArrayList();
+						
+						for(int i = 0; i < quantity; i++ ) {
+							componentOrder.add(requiredBattery);
+							componentOrder.add(requiredScreen);
+							componentOrder.add(requiredStorage);
+							componentOrder.add(requiredMemory);
+						}
+						
+						if(componentOrder != null) {
+							ACLMessage shipment = new ACLMessage(ACLMessage.REQUEST);
+							shipment.addReceiver(ManufacturerAID);
+							shipment.setLanguage(codec.getName());
+							shipment.setOntology("my_ontology");
 
+							SupplierResponseOwns owns = new SupplierResponseOwns();
+							owns.setManufacturer(ManufacturerAID);
+							owns.setComponentList(componentOrder);
+							getContentManager().fillContent(shipment, owns);
+							// Shipment sends the components, with price and delivery time for each
+							send(shipment);
+							
+						}
+						
 					}
 
 				} catch (CodecException ce) {
@@ -200,6 +226,7 @@ public class SupplierAgent extends Agent {
 					System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
 					
 					myAgent.addBehaviour(new FindManufacturer(myAgent));
+					//SendPreviousOrders - FindManufacturer(), find AID of sender, reply with list, wipe hashmap
 					CyclicBehaviour os = new ReceiveOrder(myAgent);
 					myAgent.addBehaviour(os);
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();

@@ -56,7 +56,7 @@
 
 			@Override
 			public void action() {
-				System.out.println("Sync Agents Action");
+//				System.out.println("Sync Agents Action");
 				switch (step) {
 					case 0:
 						sendNewDayToAgents();
@@ -68,7 +68,7 @@
 			}
 
 			private void waitForDoneAgents() {
-				System.out.println("wait for done");
+//				System.out.println("wait for done");
 				// wait to receive a "done" message from all agents
 				MessageTemplate mt = MessageTemplate.MatchContent("done");
 				ACLMessage msg = myAgent.receive(mt);
@@ -83,8 +83,10 @@
 			}
 
 			private void sendNewDayToAgents() {
-				System.out.println("send new day");
-				System.out.println("Start of Day " + (day+1));
+//				System.out.println("send new day");
+				System.out.println("");
+				System.out.println("---------Start of Day " + (day+1) + "------------");
+				System.out.println("");
 				// find all agents using dictionary service
 				DFAgentDescription manufacturerTemplate = new DFAgentDescription();
 				ServiceDescription sd = new ServiceDescription();
@@ -117,10 +119,10 @@
 				// send new day message to each agent
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("new day");
-				System.out.println("SENDING NEW DAY - TICK = " + tick);
+//				System.out.println("SENDING NEW DAY - TICK = " + tick);
 				for (AID id : simulationAgents) {
 					tick.addReceiver(id);
-					System.out.println(this.getClass().getCanonicalName() + ": " + "SENDING TICK TO AGENT " + id);
+//					System.out.println(this.getClass().getCanonicalName() + ": " + "SENDING TICK TO AGENT " + id);
 				}
 				myAgent.send(tick);
 				step++;
@@ -142,7 +144,9 @@
 
 			@Override
 			public int onEnd() {
-				System.out.println("End of day " + day);
+				System.out.println("");
+				System.out.println("---------End of day " + day + "------------");
+				System.out.println("");
 				if (day == NUM_DAYS) {
 					// send termination message to each agent
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);

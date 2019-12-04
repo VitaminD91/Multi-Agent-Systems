@@ -1,13 +1,18 @@
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import Coursework10111_ontology.BatteryOntology;
 import Coursework10111_ontology.CommunicationsOntology;
+import Coursework10111_ontology.ComponentOntology;
 import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.ManufacturerDeliveryOwns;
 import Coursework10111_ontology.ManufacturerOwns;
 import Coursework10111_ontology.OrderOntology;
 import Coursework10111_ontology.Sell;
 import Coursework10111_ontology.SupplierOwns;
+import Coursework10111_ontology.SupplierResponseOwns;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -82,6 +87,7 @@ public class ManufacturerAgent extends Agent {
 	private AID SupplierAID;
 	private int numQueriesSent;
 	private OrderOntology collectedOrder; // should be a list
+	private List<ComponentOntology> collectedDelivery;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
 
@@ -144,27 +150,147 @@ public class ManufacturerAgent extends Agent {
 				if (tickerAgent == null) {
 					tickerAgent = msg.getSender();
 				}
-					if (msg.getContent().equals("new day")) {
-						System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
-						// spawn new sequential behaviour for day's activities
-						SequentialBehaviour dailyActivity = new SequentialBehaviour();
-						// sub-behaviours will execute in the order they are added
-						dailyActivity.addSubBehaviour(new CollectOrders(myAgent));
-						dailyActivity.addSubBehaviour(new AssembleAvailableOrders(myAgent));
-						dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
-						dailyActivity.addSubBehaviour(new SendComponentOrder(myAgent));
-						dailyActivity.addSubBehaviour(new EndDay(myAgent));
-						myAgent.addBehaviour(dailyActivity);
-					} else {
-						// Terminate message to end simulation
-						myAgent.doDelete();
-					}
+				if (msg.getContent().equals("new day")) {
+					System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
+					// spawn new sequential behaviour for day's activities
+					SequentialBehaviour dailyActivity = new SequentialBehaviour();
+					// sub-behaviours will execute in the order they are added
+					dailyActivity.addSubBehaviour(new CollectDelivery(myAgent));
+					dailyActivity.addSubBehaviour(new CollectOrders(myAgent));
+					dailyActivity.addSubBehaviour(new AssembleAvailableOrders(myAgent));
+					dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
+					dailyActivity.addSubBehaviour(new SendComponentOrder(myAgent));
+					dailyActivity.addSubBehaviour(new EndDay(myAgent));
+					myAgent.addBehaviour(dailyActivity);
 				} else {
-					block();
+					// Terminate message to end simulation
+					myAgent.doDelete();
 				}
+			} else {
+				block();
 			}
 		}
-	
+	}
+
+	public class CollectDelivery extends OneShotBehaviour {
+
+		public CollectDelivery(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			System.out.println("Collect Delivery Contrustor");
+
+			MessageTemplate delivery = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			ACLMessage msg = receive(delivery);
+			if (msg != null) {
+				try {
+					System.out.println("Delivery Received!");
+					ContentElement ce = null;
+
+					// let JADE convert from String to Java objects
+					// Output will be a ContentElement
+
+					ce = getContentManager().extractContent(msg);
+					if (ce instanceof SupplierResponseOwns) {
+						List<ComponentOntology> newDelivery = ((SupplierResponseOwns) ce).getComponentList();
+						System.out.println(getName() + " received Delivery: " + newDelivery);
+						collectedDelivery = newDelivery;
+						String smallBattery = "2000mAh";
+						String largeBattery = "3000mAh";
+						String smallScreen = "5\"";
+						String largeScreen = "7\"";
+						String smallMemory = "4GB";
+						String largeMemory = "8GB";
+						String smallStorage = "64GB";
+						String largeStorage = "256GB";
+						
+						
+
+						HashMap<String,Integer> frequencymap = new HashMap<String,Integer>();
+						for(int i = 0; i < collectedDelivery.size(); i++){
+							
+							//SMALL BATTERY
+							if(frequencymap.containsKey(smallBattery)) {
+								frequencymap.put(smallBattery, frequencymap.get(smallBattery)+1);
+							}
+							else {
+								frequencymap.put(smallBattery, 1);
+							}
+							
+							//LARGE BATTERY
+							if(frequencymap.containsKey(largeBattery)) {
+								frequencymap.put(largeBattery, frequencymap.get(largeBattery)+1);
+							}
+							else {
+								frequencymap.put(largeBattery, 1);
+							}
+							
+							//SMALL SCREEN
+							if(frequencymap.containsKey(smallScreen)) {
+								frequencymap.put(smallScreen, frequencymap.get(smallScreen)+1);
+							}
+							else {
+								frequencymap.put(smallScreen, 1);
+							}
+							
+							//LARGE SCREEN
+							if(frequencymap.containsKey(largeScreen)) {
+								frequencymap.put(largeScreen, frequencymap.get(largeScreen)+1);
+							}
+							else {
+								frequencymap.put(largeScreen, 1);
+							}
+							
+							//SMALL MEMORY
+							if(frequencymap.containsKey(smallMemory)) {
+								frequencymap.put(smallMemory, frequencymap.get(smallMemory)+1);
+							}
+							else {
+								frequencymap.put(smallMemory, 1);
+							}
+							
+							//LARGE MEMORY
+							if(frequencymap.containsKey(largeMemory)) {
+								frequencymap.put(largeMemory, frequencymap.get(largeMemory)+1);
+							}
+							else {
+								frequencymap.put(largeMemory, 1);
+							}
+							
+							//SMALL STORAGE
+							if(frequencymap.containsKey(smallStorage)) {
+								frequencymap.put(smallStorage, frequencymap.get(smallStorage)+1);
+							}
+							else {
+								frequencymap.put(smallStorage, 1);
+							}
+							
+							//LARGE STORAGE
+							if(frequencymap.containsKey(largeStorage)) {
+								frequencymap.put(largeStorage, frequencymap.get(largeStorage)+1);
+							}
+							else {
+								frequencymap.put(largeStorage, 1);
+							}
+							
+							
+						}
+						System.out.println("HERE LOOK -----> " + frequencymap);
+					
+
+					}
+				} catch (CodecException ce) {
+					ce.printStackTrace();
+				} catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+			} else {
+				block();
+			}
+		}
+	}
 
 	public class CollectOrders extends OneShotBehaviour {
 
