@@ -84,10 +84,10 @@ public class ManufacturerAgent extends Agent {
 	private ArrayList<String> componentsToBuy = new ArrayList<>();
 	private AID tickerAgent;
 	private AID CustomerAgent;
-	private AID SupplierAID;
 	private int numQueriesSent;
 	private OrderOntology collectedOrder; // should be a list
 	private List<ComponentOntology> collectedDelivery;
+	private HashMap<String, Integer> Warehouse = new HashMap<String,Integer>();
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
 
@@ -97,7 +97,6 @@ public class ManufacturerAgent extends Agent {
 		System.out.println(this.getClass().getCanonicalName() + ": " + "created");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		SupplierAID = new AID("supplier", AID.ISLOCALNAME);
 
 		System.out.println("Hello Agent " + getAID().getName() + " is ready.");
 
@@ -113,13 +112,6 @@ public class ManufacturerAgent extends Agent {
 		} catch (FIPAException e) {
 			e.printStackTrace();
 		}
-
-		// add components to buy
-		componentsToBuy.add("Large Screen");
-		// componentsToBuy.add(screen.size * quantityOfPhones);
-		// componentsToBuy.add(battery.capacity * quantityOfPhones);
-		// componentsToBuy.add(memory.capacity * quantityOfPhones);
-		// componentsToBuy.add(storage.capacity * quantityOfPhones);
 
 		addBehaviour(new TickerWaiter(this));
 	}
@@ -155,10 +147,10 @@ public class ManufacturerAgent extends Agent {
 					// spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					// sub-behaviours will execute in the order they are added
+					dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
 					dailyActivity.addSubBehaviour(new CollectDelivery(myAgent));
 					dailyActivity.addSubBehaviour(new CollectOrders(myAgent));
 					dailyActivity.addSubBehaviour(new AssembleAvailableOrders(myAgent));
-					dailyActivity.addSubBehaviour(new FindSuppliers(myAgent));
 					dailyActivity.addSubBehaviour(new SendComponentOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -191,10 +183,11 @@ public class ManufacturerAgent extends Agent {
 
 					// let JADE convert from String to Java objects
 					// Output will be a ContentElement
+					
 
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof SupplierResponseOwns) {
-						List<ComponentOntology> newDelivery = ((SupplierResponseOwns) ce).getComponentList();
+						List<ComponentOntology>newDelivery = ((SupplierResponseOwns) ce).getComponentList();
 						System.out.println(getName() + " received Delivery: " + newDelivery);
 						collectedDelivery = newDelivery;
 						String smallBattery = "2000mAh";
@@ -207,79 +200,32 @@ public class ManufacturerAgent extends Agent {
 						String largeStorage = "256GB";
 						
 						
-
 						HashMap<String,Integer> frequencymap = new HashMap<String,Integer>();
-						for(int i = 0; i < collectedDelivery.size(); i++){
+						for(int i = 0; i < collectedDelivery.size() / 4; i++){
 							
 							//SMALL BATTERY
-							if(frequencymap.containsKey(smallBattery)) {
-								frequencymap.put(smallBattery, frequencymap.get(smallBattery)+1);
-							}
-							else {
-								frequencymap.put(smallBattery, 1);
-							}
-							
+							IncrementComponentCounter(frequencymap, smallBattery);
 							//LARGE BATTERY
-							if(frequencymap.containsKey(largeBattery)) {
-								frequencymap.put(largeBattery, frequencymap.get(largeBattery)+1);
-							}
-							else {
-								frequencymap.put(largeBattery, 1);
-							}
+							IncrementComponentCounter(frequencymap, largeBattery);
 							
 							//SMALL SCREEN
-							if(frequencymap.containsKey(smallScreen)) {
-								frequencymap.put(smallScreen, frequencymap.get(smallScreen)+1);
-							}
-							else {
-								frequencymap.put(smallScreen, 1);
-							}
-							
+							IncrementComponentCounter(frequencymap, smallScreen);
 							//LARGE SCREEN
-							if(frequencymap.containsKey(largeScreen)) {
-								frequencymap.put(largeScreen, frequencymap.get(largeScreen)+1);
-							}
-							else {
-								frequencymap.put(largeScreen, 1);
-							}
+							IncrementComponentCounter(frequencymap, largeScreen);
 							
 							//SMALL MEMORY
-							if(frequencymap.containsKey(smallMemory)) {
-								frequencymap.put(smallMemory, frequencymap.get(smallMemory)+1);
-							}
-							else {
-								frequencymap.put(smallMemory, 1);
-							}
-							
+							IncrementComponentCounter(frequencymap, smallMemory);
 							//LARGE MEMORY
-							if(frequencymap.containsKey(largeMemory)) {
-								frequencymap.put(largeMemory, frequencymap.get(largeMemory)+1);
-							}
-							else {
-								frequencymap.put(largeMemory, 1);
-							}
+							IncrementComponentCounter(frequencymap, largeMemory);
 							
 							//SMALL STORAGE
-							if(frequencymap.containsKey(smallStorage)) {
-								frequencymap.put(smallStorage, frequencymap.get(smallStorage)+1);
-							}
-							else {
-								frequencymap.put(smallStorage, 1);
-							}
-							
+							IncrementComponentCounter(frequencymap, smallStorage);
 							//LARGE STORAGE
-							if(frequencymap.containsKey(largeStorage)) {
-								frequencymap.put(largeStorage, frequencymap.get(largeStorage)+1);
-							}
-							else {
-								frequencymap.put(largeStorage, 1);
-							}
-							
-							
+							IncrementComponentCounter(frequencymap, largeStorage);
 						}
-						System.out.println("HERE LOOK -----> " + frequencymap);
-					
-
+						
+						System.out.println("HERE LOOK -----> " + frequencymap);	
+						
 					}
 				} catch (CodecException ce) {
 					ce.printStackTrace();
@@ -290,7 +236,26 @@ public class ManufacturerAgent extends Agent {
 				block();
 			}
 		}
+
 	}
+	
+	private void IncrementComponentCounter(HashMap<String, Integer> frequencymap, String component) {
+		
+		
+		if(frequencymap.containsKey(component)) {
+			frequencymap.put(component, frequencymap.get(component)+1);
+			
+		}
+		else {
+			frequencymap.put(component, 1);
+		}
+	}
+	
+	private void AddToWarehouse(HashMap<String, Integer> Warehouse, String component) {
+		
+	}
+
+	
 
 	public class CollectOrders extends OneShotBehaviour {
 
@@ -303,16 +268,21 @@ public class ManufacturerAgent extends Agent {
 		public void action() {
 			System.out.println("Collect Orders Constructor");
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println("1");
 
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			System.out.println("2");
 			ACLMessage msg = receive(mt);
+			System.out.println("3");
+			
 			if (msg != null) {
+				System.out.println("4");
 				try {
+					System.out.println("5");
 					System.out.println("Message Received!");
 					ContentElement ce = null;
 
@@ -332,6 +302,7 @@ public class ManufacturerAgent extends Agent {
 					oe.printStackTrace();
 				}
 			} else {
+				System.out.println("6");
 				block();
 			}
 		}
@@ -384,12 +355,12 @@ public class ManufacturerAgent extends Agent {
 
 			if (collectedOrder != null) {
 				ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
-				enquiry.addReceiver(SupplierAID);
+				enquiry.addReceiver(getAID("supplier1"));
 				enquiry.setLanguage(codec.getName());
 				enquiry.setOntology("my_ontology");
 
 				SupplierOwns owns = new SupplierOwns();
-				owns.setSupplier(SupplierAID);
+				owns.setSupplier(getAID("supplier1"));
 				owns.setManufacturerOrder(collectedOrder);
 				try {
 

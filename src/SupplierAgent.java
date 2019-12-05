@@ -31,17 +31,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-//***********WHAT I WANT THIS TO DO************//
-
-// Receives request for parts from Manufacturer
-
-// Accepts request
-
-// Generates total cost
-
-// Sends parts to Manufacturer 
-
-//*******************************************//
 
 public class SupplierAgent extends Agent {
 
@@ -49,17 +38,14 @@ public class SupplierAgent extends Agent {
 
 	private Codec codec = new SLCodec();
 	private Ontology ontology = CommunicationsOntology.getInstance();
-
-	// CREATES A HASHMAP OF ORDERS FOR SALE
-	private HashMap<AID, List<ComponentOntology>> orderToProcess = new HashMap<>();
 	// REFERENCES TICKER AGENT ID
 	private AID tickerAgent;
 	private AID ManufacturerAID;
+	private ComponentOntology[] componentsForSale;
 
-	//i DON'T LIKE THIS
 	@Override
 	protected void setup() {
-
+		componentsForSale = (ComponentOntology[]) getArguments();
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -134,23 +120,47 @@ public class SupplierAgent extends Agent {
 					if (ce instanceof SupplierOwns) {
 						OrderOntology order = ((SupplierOwns) ce).getManufacturerOrder();
 						int quantity = order.getQuantityOfPhones();
-						System.out.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
+						System.out
+								.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
 						DeviceOntology device = order.getDevice();
 						BatteryOntology requiredBattery = device.getBattery();
 						ScreenOntology requiredScreen = device.getScreen();
 						StorageOntology requiredStorage = device.getStorage();
 						MemoryOntology requiredMemory = device.getMemory();
-						
+
+						for (ComponentOntology c : componentsForSale) {
+							if (c instanceof BatteryOntology
+									&& ((BatteryOntology) c).getCapacity() == requiredBattery.getCapacity()) {
+								requiredBattery.setPrice(c.getPrice());
+								requiredBattery.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof ScreenOntology
+									&& ((ScreenOntology) c).getSize() == requiredScreen.getSize()) {
+								requiredScreen.setPrice(c.getPrice());
+								requiredScreen.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof StorageOntology
+									&& ((StorageOntology) c).getCapacity() == requiredStorage.getCapacity()) {
+								requiredStorage.setPrice(c.getPrice());
+								requiredStorage.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof MemoryOntology
+									&& ((MemoryOntology) c).getCapacity() == requiredMemory.getCapacity()) {
+								requiredMemory.setPrice(c.getPrice());
+								requiredMemory.setDeliveryTime(c.getDeliveryTime());
+							}
+						}
+
 						List<ComponentOntology> componentOrder = new ArrayList();
-						
-						for(int i = 0; i < quantity; i++ ) {
+
+						for (int i = 0; i < quantity; i++) {
 							componentOrder.add(requiredBattery);
 							componentOrder.add(requiredScreen);
 							componentOrder.add(requiredStorage);
 							componentOrder.add(requiredMemory);
 						}
-						
-						if(componentOrder != null) {
+
+						if (componentOrder != null) {
 							ACLMessage shipment = new ACLMessage(ACLMessage.REQUEST);
 							shipment.addReceiver(ManufacturerAID);
 							shipment.setLanguage(codec.getName());
@@ -161,10 +171,11 @@ public class SupplierAgent extends Agent {
 							owns.setComponentList(componentOrder);
 							getContentManager().fillContent(shipment, owns);
 							// Shipment sends the components, with price and delivery time for each
+							System.out.println("DARREN LOOK AT THIS ------> " + shipment);
 							send(shipment);
-							
+
 						}
-						
+
 					}
 
 				} catch (CodecException ce) {
@@ -176,7 +187,6 @@ public class SupplierAgent extends Agent {
 			}
 		}
 	}
-
 
 	public class EndDayListener extends CyclicBehaviour {
 
@@ -224,9 +234,10 @@ public class SupplierAgent extends Agent {
 				}
 				if (msg.getContent().equals("new day")) {
 					System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
-					
+
 					myAgent.addBehaviour(new FindManufacturer(myAgent));
-					//SendPreviousOrders - FindManufacturer(), find AID of sender, reply with list, wipe hashmap
+					// SendPreviousOrders - FindManufacturer(), find AID of sender, reply with list,
+					// wipe hashmap
 					CyclicBehaviour os = new ReceiveOrder(myAgent);
 					myAgent.addBehaviour(os);
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();

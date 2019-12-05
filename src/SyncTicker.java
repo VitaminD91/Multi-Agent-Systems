@@ -119,10 +119,10 @@
 				// send new day message to each agent
 				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
 				tick.setContent("new day");
-//				System.out.println("SENDING NEW DAY - TICK = " + tick);
+				System.out.println("SENDING NEW DAY - TICK = " + tick);
 				for (AID id : simulationAgents) {
 					tick.addReceiver(id);
-//					System.out.println(this.getClass().getCanonicalName() + ": " + "SENDING TICK TO AGENT " + id);
+					System.out.println(this.getClass().getCanonicalName() + ": " + "SENDING TICK TO AGENT " + id);
 				}
 				myAgent.send(tick);
 				step++;
