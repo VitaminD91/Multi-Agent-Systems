@@ -4,13 +4,18 @@ import java.util.HashMap;
 import java.util.List;
 
 import Coursework10111_ontology.BatteryOntology;
-import Coursework10111_ontology.CommunicationsOntology;
 import Coursework10111_ontology.ComponentOntology;
+import Coursework10111_ontology.CustomerOntology;
 import Coursework10111_ontology.DeviceOntology;
 import Coursework10111_ontology.ManufacturerDeliveryOwns;
+import Coursework10111_ontology.ManufacturerOntology;
 import Coursework10111_ontology.ManufacturerOwns;
+import Coursework10111_ontology.MemoryOntology;
 import Coursework10111_ontology.OrderOntology;
+import Coursework10111_ontology.ScreenOntology;
 import Coursework10111_ontology.Sell;
+import Coursework10111_ontology.StorageOntology;
+import Coursework10111_ontology.SupplierOntology;
 import Coursework10111_ontology.SupplierOwns;
 import Coursework10111_ontology.SupplierResponseOwns;
 import jade.content.Concept;
@@ -86,10 +91,14 @@ public class ManufacturerAgent extends Agent {
 	private AID CustomerAgent;
 	private AID SupplierAID;
 	private int numQueriesSent;
-	private OrderOntology collectedOrder; // should be a list
+	private List<OrderOntology> collectedOrders = new ArrayList<OrderOntology>();
 	private List<ComponentOntology> collectedDelivery;
+
+	private HashMap<String, Integer> Warehouse = new HashMap<String, Integer>();
+
 	private Codec codec = new SLCodec();
-	private Ontology ontology = CommunicationsOntology.getInstance();
+	private Ontology ontology = ManufacturerOntology.getInstance();
+	private double totalProfit = 0;
 
 	@Override
 	protected void setup() {
@@ -97,7 +106,10 @@ public class ManufacturerAgent extends Agent {
 		System.out.println(this.getClass().getCanonicalName() + ": " + "created");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-		SupplierAID = new AID("supplier", AID.ISLOCALNAME);
+		getContentManager().registerOntology(CustomerOntology.getInstance());
+		getContentManager().registerOntology(SupplierOntology.getInstance());
+		CustomerAgent = new AID("customer", AID.ISLOCALNAME);
+
 
 		System.out.println("Hello Agent " + getAID().getName() + " is ready.");
 
@@ -180,13 +192,12 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			System.out.println("Collect Delivery Contrustor");
+			System.out.println("Collect Delivery action");
 
-			MessageTemplate delivery = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			MessageTemplate delivery = MessageTemplate.MatchOntology(SupplierOntology.getInstance().getName());
 			ACLMessage msg = receive(delivery);
 			if (msg != null) {
 				try {
-					System.out.println("Delivery Received!");
 					ContentElement ce = null;
 
 					// let JADE convert from String to Java objects
@@ -197,88 +208,15 @@ public class ManufacturerAgent extends Agent {
 						List<ComponentOntology> newDelivery = ((SupplierResponseOwns) ce).getComponentList();
 						System.out.println(getName() + " received Delivery: " + newDelivery);
 						collectedDelivery = newDelivery;
-						String smallBattery = "2000mAh";
-						String largeBattery = "3000mAh";
-						String smallScreen = "5\"";
-						String largeScreen = "7\"";
-						String smallMemory = "4GB";
-						String largeMemory = "8GB";
-						String smallStorage = "64GB";
-						String largeStorage = "256GB";
-						
-						
-
-						HashMap<String,Integer> frequencymap = new HashMap<String,Integer>();
-						for(int i = 0; i < collectedDelivery.size(); i++){
-							
-							//SMALL BATTERY
-							if(frequencymap.containsKey(smallBattery)) {
-								frequencymap.put(smallBattery, frequencymap.get(smallBattery)+1);
-							}
-							else {
-								frequencymap.put(smallBattery, 1);
-							}
-							
-							//LARGE BATTERY
-							if(frequencymap.containsKey(largeBattery)) {
-								frequencymap.put(largeBattery, frequencymap.get(largeBattery)+1);
-							}
-							else {
-								frequencymap.put(largeBattery, 1);
-							}
-							
-							//SMALL SCREEN
-							if(frequencymap.containsKey(smallScreen)) {
-								frequencymap.put(smallScreen, frequencymap.get(smallScreen)+1);
-							}
-							else {
-								frequencymap.put(smallScreen, 1);
-							}
-							
-							//LARGE SCREEN
-							if(frequencymap.containsKey(largeScreen)) {
-								frequencymap.put(largeScreen, frequencymap.get(largeScreen)+1);
-							}
-							else {
-								frequencymap.put(largeScreen, 1);
-							}
-							
-							//SMALL MEMORY
-							if(frequencymap.containsKey(smallMemory)) {
-								frequencymap.put(smallMemory, frequencymap.get(smallMemory)+1);
-							}
-							else {
-								frequencymap.put(smallMemory, 1);
-							}
-							
-							//LARGE MEMORY
-							if(frequencymap.containsKey(largeMemory)) {
-								frequencymap.put(largeMemory, frequencymap.get(largeMemory)+1);
-							}
-							else {
-								frequencymap.put(largeMemory, 1);
-							}
-							
-							//SMALL STORAGE
-							if(frequencymap.containsKey(smallStorage)) {
-								frequencymap.put(smallStorage, frequencymap.get(smallStorage)+1);
-							}
-							else {
-								frequencymap.put(smallStorage, 1);
-							}
-							
-							//LARGE STORAGE
-							if(frequencymap.containsKey(largeStorage)) {
-								frequencymap.put(largeStorage, frequencymap.get(largeStorage)+1);
-							}
-							else {
-								frequencymap.put(largeStorage, 1);
-							}
-							
-							
+						float totalCost = 0f;
+						for (int i = 0; i < collectedDelivery.size(); i++) {
+							totalCost += collectedDelivery.get(i).getPrice();
+							IncrementWarehouse(collectedDelivery.get(i).toString());
 						}
-						System.out.println("HERE LOOK -----> " + frequencymap);
-					
+						totalProfit -= totalCost;
+						System.out.println(
+								"Total cost: £" + totalCost + " for " + collectedDelivery.size() + " Components");
+
 
 					}
 				} catch (CodecException ce) {
@@ -287,9 +225,21 @@ public class ManufacturerAgent extends Agent {
 					oe.printStackTrace();
 				}
 			} else {
-				block();
+				// block();
 			}
 		}
+
+	}
+
+	private void IncrementWarehouse(String componentName) {
+
+		if (Warehouse.containsKey(componentName)) {
+			Warehouse.put(componentName, Warehouse.get(componentName) + 1);
+
+		} else {
+			Warehouse.put(componentName, 1);
+		}
+
 	}
 
 	public class CollectOrders extends OneShotBehaviour {
@@ -301,19 +251,23 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			System.out.println("Collect Orders Constructor");
+			System.out.println("Collect Orders action");
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(1000);
+
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
-			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+			MessageTemplate mt = MessageTemplate.MatchOntology(CustomerOntology.getInstance().getName());
 			ACLMessage msg = receive(mt);
+
 			if (msg != null) {
+				System.out.println(msg.getOntology());
 				try {
-					System.out.println("Message Received!");
+					System.out.println("Order Received! " + msg);
+
 					ContentElement ce = null;
 
 					// let JADE convert from String to Java objects
@@ -323,7 +277,7 @@ public class ManufacturerAgent extends Agent {
 					if (ce instanceof ManufacturerOwns) {
 						OrderOntology order = ((ManufacturerOwns) ce).getOrder();
 						System.out.println(getName() + " received order: " + order);
-						collectedOrder = order;
+						collectedOrders.add(order);
 
 					}
 				} catch (CodecException ce) {
@@ -332,7 +286,8 @@ public class ManufacturerAgent extends Agent {
 					oe.printStackTrace();
 				}
 			} else {
-				block();
+				 block();
+
 			}
 		}
 	}
@@ -346,6 +301,56 @@ public class ManufacturerAgent extends Agent {
 		@Override
 		public void action() {
 			System.out.println("Assemble Available Orders Action");
+			
+			if (Warehouse.isEmpty()) {
+				System.out.println("Warehouse is empty");
+				for (OrderOntology collectedOrder : collectedOrders) {
+					collectedOrder.setDaysWaited(collectedOrder.getDaysWaited()+1);
+				}
+				return;
+			}
+			List<OrderOntology> processedOrders = new ArrayList<OrderOntology>();
+			for (OrderOntology collectedOrder : collectedOrders) {
+				
+				BatteryOntology desiredBattery = collectedOrder.getDevice().getBattery();
+				ScreenOntology desiredScreen = collectedOrder.getDevice().getScreen();
+				MemoryOntology desiredMemory = collectedOrder.getDevice().getMemory();
+				StorageOntology desiredStorage = collectedOrder.getDevice().getStorage();
+				
+				int batteriesInWarehouse = Warehouse.get(desiredBattery.toString()) != null 
+						? Warehouse.get(desiredBattery.toString()) : 0;
+				int screensInWarehouse = Warehouse.get(desiredScreen.toString()) != null 
+						? Warehouse.get(desiredScreen.toString()) : 0;
+				int memoryInWarehouse = Warehouse.get(desiredMemory.toString()) != null 
+						? Warehouse.get(desiredMemory.toString()) : 0;
+				int storageInWarehouse = Warehouse.get(desiredStorage.toString()) != null 
+						? Warehouse.get(desiredStorage.toString()) : 0;
+
+				int quantityNeeded = collectedOrder.getQuantityOfPhones();
+				if (batteriesInWarehouse >= quantityNeeded && screensInWarehouse >= quantityNeeded
+						&& memoryInWarehouse >= quantityNeeded && storageInWarehouse >= quantityNeeded) {
+
+					double pricePerPhone = collectedOrder.getUnitPrice();
+					double totalGain = pricePerPhone * quantityNeeded;
+					double totalLateFee = 0;
+					int daysOverdue = collectedOrder.getDaysWaited() - collectedOrder.getOrderDueDays(); 
+					if(daysOverdue > 0) {
+						totalLateFee = collectedOrder.getLatePenalty() * daysOverdue;
+					}
+					processedOrders.add(collectedOrder);
+					
+					totalProfit += totalGain - totalLateFee;
+							
+					System.out.println("Sold " + quantityNeeded + " phones for £" + pricePerPhone
+							+ " Total Gain: £" + totalGain + ". Late Fees: £" + totalLateFee);
+				} else {
+					System.out.println("Not enough components to assemble phone, awaiting next delivery");
+					collectedOrder.setDaysWaited(collectedOrder.getDaysWaited()+1);
+				} 
+			}
+			
+			collectedOrders.removeAll(processedOrders);
+
 		}
 	}
 
@@ -382,26 +387,29 @@ public class ManufacturerAgent extends Agent {
 		@Override
 		public void action() {
 
-			if (collectedOrder != null) {
-				ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
-				enquiry.addReceiver(SupplierAID);
-				enquiry.setLanguage(codec.getName());
-				enquiry.setOntology("my_ontology");
+			for (OrderOntology collectedOrder : collectedOrders) {
+				if (collectedOrder != null) {
+					ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
+					enquiry.addReceiver(getAID("supplier1"));
+					enquiry.setLanguage(codec.getName());
+					enquiry.setOntology(ontology.getName());
 
-				SupplierOwns owns = new SupplierOwns();
-				owns.setSupplier(SupplierAID);
-				owns.setManufacturerOrder(collectedOrder);
-				try {
+					SupplierOwns owns = new SupplierOwns();
+					owns.setSupplier(getAID("supplier1"));
+					owns.setManufacturerOrder(collectedOrder);
+					try {
 
-					getContentManager().fillContent(enquiry, owns);
-					send(enquiry);
-				} catch (CodecException ce) {
-					ce.printStackTrace();
-				} catch (OntologyException oe) {
-					oe.printStackTrace();
+						getContentManager().fillContent(enquiry, owns);
+						send(enquiry);
+					} catch (CodecException ce) {
+						ce.printStackTrace();
+					} catch (OntologyException oe) {
+						oe.printStackTrace();
+					}
+
 				}
-			}
 
+			}
 		}
 	}
 
@@ -413,6 +421,8 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
+			System.out.println("Manufacturer Profit Updated!: £" + totalProfit);
+			
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
@@ -424,6 +434,7 @@ public class ManufacturerAgent extends Agent {
 				supplierDone.addReceiver(supplier);
 			}
 			myAgent.send(supplierDone);
+			myAgent.removeBehaviour(this);
 		}
 
 	}

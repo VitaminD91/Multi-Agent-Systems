@@ -144,9 +144,6 @@
 
 			@Override
 			public int onEnd() {
-				System.out.println("");
-				System.out.println("---------End of day " + day + "------------");
-				System.out.println("");
 				if (day == NUM_DAYS) {
 					// send termination message to each agent
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -160,8 +157,9 @@
 					reset();
 					myAgent.addBehaviour(this);
 				}
-
+				
 				return 0;
+				
 			}
 
 		}

@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import Coursework10111_ontology.BatteryOntology;
-import Coursework10111_ontology.CommunicationsOntology;
 import Coursework10111_ontology.ComponentOntology;
 import Coursework10111_ontology.DeviceOntology;
+import Coursework10111_ontology.ManufacturerOntology;
 import Coursework10111_ontology.MemoryOntology;
 import Coursework10111_ontology.OrderOntology;
 import Coursework10111_ontology.ScreenOntology;
 import Coursework10111_ontology.StorageOntology;
+import Coursework10111_ontology.SupplierOntology;
 import Coursework10111_ontology.SupplierOwns;
 import Coursework10111_ontology.SupplierResponseOwns;
 import jade.content.ContentElement;
@@ -48,10 +49,7 @@ public class SupplierAgent extends Agent {
 	public static String AGENT_TYPE = "Supplier";
 
 	private Codec codec = new SLCodec();
-	private Ontology ontology = CommunicationsOntology.getInstance();
-
-	// CREATES A HASHMAP OF ORDERS FOR SALE
-	private HashMap<AID, List<ComponentOntology>> orderToProcess = new HashMap<>();
+	private Ontology ontology = SupplierOntology.getInstance();
 	// REFERENCES TICKER AGENT ID
 	private AID tickerAgent;
 	private AID ManufacturerAID;
@@ -62,7 +60,7 @@ public class SupplierAgent extends Agent {
 
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-
+		getContentManager().registerOntology(ManufacturerOntology.getInstance());
 		System.out.println("Hello Agent " + getAID().getName() + " is ready.");
 
 		// ADD THIS AGENT TO THE YELLOW PAGES
@@ -96,11 +94,6 @@ public class SupplierAgent extends Agent {
 			manufacturerTemplate.addServices(sd);
 			try {
 				DFAgentDescription[] manufacturerAgents = DFService.search(myAgent, manufacturerTemplate);
-				/*
-				 * LOOPING THROUGH LIST OF MANUFACTURERS AND ADDING TO LIST for (int i = 0; i <
-				 * agentsType1.length; i++) { manufacturers.add(agentsType1[i].getName()); //
-				 * this is the AID }
-				 */
 				DFAgentDescription manufacturerInList = manufacturerAgents[0];
 				if (manufacturerInList != null) {
 					ManufacturerAID = manufacturerInList.getName();
@@ -134,7 +127,7 @@ public class SupplierAgent extends Agent {
 					if (ce instanceof SupplierOwns) {
 						OrderOntology order = ((SupplierOwns) ce).getManufacturerOrder();
 						int quantity = order.getQuantityOfPhones();
-						System.out.println(getName() + " received order for " + order.getQuantityOfPhones() + " phones");
+
 						DeviceOntology device = order.getDevice();
 						BatteryOntology requiredBattery = device.getBattery();
 						ScreenOntology requiredScreen = device.getScreen();
@@ -154,7 +147,7 @@ public class SupplierAgent extends Agent {
 							ACLMessage shipment = new ACLMessage(ACLMessage.REQUEST);
 							shipment.addReceiver(ManufacturerAID);
 							shipment.setLanguage(codec.getName());
-							shipment.setOntology("my_ontology");
+							shipment.setOntology(ontology.getName());
 
 							SupplierResponseOwns owns = new SupplierResponseOwns();
 							owns.setManufacturer(ManufacturerAID);
@@ -162,7 +155,6 @@ public class SupplierAgent extends Agent {
 							getContentManager().fillContent(shipment, owns);
 							// Shipment sends the components, with price and delivery time for each
 							send(shipment);
-							
 						}
 						
 					}
@@ -177,33 +169,21 @@ public class SupplierAgent extends Agent {
 		}
 	}
 
+	public class EndDay extends OneShotBehaviour {
 
-	public class EndDayListener extends CyclicBehaviour {
-
-		private Behaviour toRemove;
-
-		public EndDayListener(Agent a, Behaviour toRemove) {
+		public EndDay(Agent a) {
 			super(a);
-			this.toRemove = toRemove;
-			/* this.toRemove = toRemove; */}
+		}
 
 		@Override
 		public void action() {
-			MessageTemplate mt = MessageTemplate.MatchContent("done");
-			ACLMessage msg = myAgent.receive(mt);
-			if (msg != null) {
-				// Order is finished
-				ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
-				tick.setContent("done");
-				tick.addReceiver(tickerAgent);
-				myAgent.send(tick);
-				// remove behaviours
-
-				/* myAgent.removeBehaviour(toRemove); */
-
-				myAgent.removeBehaviour(this);
-			}
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(tickerAgent);
+			msg.setContent("done");
+			myAgent.send(msg);
+			myAgent.removeBehaviour(this);
 		}
+
 	}
 
 	public class TickerWaiter extends CyclicBehaviour {
@@ -226,12 +206,11 @@ public class SupplierAgent extends Agent {
 					System.out.println(this.getClass().getCanonicalName() + ": " + "Received new day");
 					
 					myAgent.addBehaviour(new FindManufacturer(myAgent));
-					//SendPreviousOrders - FindManufacturer(), find AID of sender, reply with list, wipe hashmap
 					CyclicBehaviour os = new ReceiveOrder(myAgent);
 					myAgent.addBehaviour(os);
 					ArrayList<Behaviour> cyclicBehaviours = new ArrayList<>();
 					cyclicBehaviours.add(os);
-					myAgent.addBehaviour(new EndDayListener(myAgent, this));
+					myAgent.addBehaviour(new EndDay(myAgent));
 				} else {
 					myAgent.doDelete();
 				}

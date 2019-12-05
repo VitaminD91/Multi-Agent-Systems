@@ -4,16 +4,16 @@ import jade.content.onto.BeanOntology;
 import jade.content.onto.BeanOntologyException;
 import jade.content.onto.Ontology;
 
-public class CommunicationsOntology extends BeanOntology {
+public class SupplierOntology extends BeanOntology {
 	
-	private static Ontology theInstance = new CommunicationsOntology("my_ontology");
+	private static Ontology theInstance = new SupplierOntology("supplier");
 
 	// singleton pattern
 	public static Ontology getInstance() {
 		return theInstance;
 	}
 
-	private CommunicationsOntology(String name) {
+	private SupplierOntology(String name) {
 		super(name);
 		try {
 			add("Coursework10111_ontology");

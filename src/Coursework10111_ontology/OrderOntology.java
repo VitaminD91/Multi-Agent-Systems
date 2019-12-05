@@ -10,10 +10,21 @@ public class OrderOntology implements Concept {
 	private int orderDueDays;
 	private double latePenalty;
 	private DeviceOntology device;
+	private int daysWaited;
 
 	public OrderOntology(){
 		
 	}
+	
+	
+	public Integer getDaysWaited() {
+		return daysWaited;
+	}
+	
+	public void setDaysWaited(Integer daysWaited) {
+		this.daysWaited = daysWaited;
+	}
+	
 	
 	public OrderOntology(int identificationNumber, int quantityOfPhones, double unitPrice,
 			int orderDueDays, double latePenalty, DeviceOntology device) {
@@ -24,8 +35,6 @@ public class OrderOntology implements Concept {
 		this.orderDueDays = orderDueDays;
 		this.latePenalty = latePenalty;
 		this.device = device;
-		
-		
 	}
 	
 	@Slot (mandatory = true)

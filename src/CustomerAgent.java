@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import Coursework10111_ontology.CommunicationsOntology;
+import Coursework10111_ontology.CustomerOntology;
 import Coursework10111_ontology.OrderOntology;
 import Coursework10111_ontology.ManufacturerOwns;
 import jade.content.abs.AbsContentElement;
@@ -39,7 +39,7 @@ public class CustomerAgent extends Agent {
 	public static String AGENT_TYPE = "Customer";
 
 	private Codec codec = new SLCodec();
-	private Ontology ontology = CommunicationsOntology.getInstance();
+	private Ontology ontology = CustomerOntology.getInstance();
 	private AID manufacturerAID;
 	private AID tickerAgent;
 
@@ -93,7 +93,7 @@ public class CustomerAgent extends Agent {
 						// sub-behaviours will execute in the order they are added
 	
 						dailyActivity.addSubBehaviour(new GenerateOrder());
-						dailyActivity.addSubBehaviour(new EndDayListener(myAgent, this));
+						dailyActivity.addSubBehaviour(new EndDay(myAgent));
 						myAgent.addBehaviour(dailyActivity);
 					} else {
 						// Terminate message to end simulation
@@ -114,7 +114,7 @@ public class CustomerAgent extends Agent {
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 			enquiry.addReceiver(manufacturerAID);
 			enquiry.setLanguage(codec.getName());
-			enquiry.setOntology("my_ontology");
+			enquiry.setOntology(ontology.getName());
 			// prepare content
 			// Generates an order with random specs
 			OrderHelpers ordermanager = new OrderHelpers();
@@ -138,30 +138,21 @@ public class CustomerAgent extends Agent {
 		}
 	}
 
-	public class EndDayListener extends OneShotBehaviour {
-		private Behaviour toRemove;
+	public class EndDay extends OneShotBehaviour {
 
-		public EndDayListener(Agent a, Behaviour toRemove) {
+		public EndDay(Agent a) {
 			super(a);
-			this.toRemove = toRemove;
 		}
 
 		@Override
 		public void action() {
-			System.out.println("Customer Agent EndDayListener");
-			MessageTemplate mt = MessageTemplate.MatchContent("done");
-
-			// Order is finished
-			ACLMessage tick = new ACLMessage(ACLMessage.INFORM);
-			tick.setContent("done");
-			tick.addReceiver(tickerAgent);
-			myAgent.send(tick);
-			// remove behaviours
-			
-			/* myAgent.removeBehaviour(toRemove); */
-
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(tickerAgent);
+			msg.setContent("done");
+			myAgent.send(msg);
 			myAgent.removeBehaviour(this);
 		}
+
 	}
 
 	protected void takeDown() {
