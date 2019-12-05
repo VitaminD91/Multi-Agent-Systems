@@ -126,13 +126,6 @@ public class ManufacturerAgent extends Agent {
 			e.printStackTrace();
 		}
 
-		// add components to buy
-		componentsToBuy.add("Large Screen");
-		// componentsToBuy.add(screen.size * quantityOfPhones);
-		// componentsToBuy.add(battery.capacity * quantityOfPhones);
-		// componentsToBuy.add(memory.capacity * quantityOfPhones);
-		// componentsToBuy.add(storage.capacity * quantityOfPhones);
-
 		addBehaviour(new TickerWaiter(this));
 	}
 

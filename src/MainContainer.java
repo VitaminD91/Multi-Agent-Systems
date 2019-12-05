@@ -1,4 +1,8 @@
-
+import Coursework10111_ontology.BatteryOntology;
+import Coursework10111_ontology.ComponentOntology;
+import Coursework10111_ontology.MemoryOntology;
+import Coursework10111_ontology.ScreenOntology;
+import Coursework10111_ontology.StorageOntology;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
@@ -12,22 +16,39 @@ public class MainContainer {
 		Profile myProfile = new ProfileImpl();
 		Runtime myRuntime = Runtime.instance();
 		ContainerController myContainer = myRuntime.createMainContainer(myProfile);
-		System.out.println("Jade is a load of shit");
 		try {
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
 			
-			String[] components = {};
+			ComponentOntology components1[] = {
+					new BatteryOntology(2000, 70f, 1),
+					new BatteryOntology(3000, 100f, 1),
+					new ScreenOntology(5, 100f, 1),
+					new ScreenOntology(7, 150f, 1),
+					new StorageOntology(64, 25f, 1),
+					new StorageOntology(256, 50f, 1),
+					new MemoryOntology(4, 30f, 1),
+					new MemoryOntology(8, 60f, 1)
+			};
 			
-			AgentController manufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(), components);
+			ComponentOntology[] components2 = {
+					new StorageOntology(64, 15f, 4),
+					new StorageOntology(256, 40f, 4),
+					new MemoryOntology(4, 20f, 4),
+					new MemoryOntology(8, 35f, 4)
+			};
+			
+			AgentController manufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(), null);
 			manufacturerAgent.start();
 			
-			AgentController supplierAgent = myContainer.createNewAgent("supplier", SupplierAgent.class.getCanonicalName(), components);
-			supplierAgent.start(); 
+			AgentController supplierAgent1 = myContainer.createNewAgent("supplier1", SupplierAgent.class.getCanonicalName(), components1);
+			supplierAgent1.start(); 
+			AgentController supplierAgent2 = myContainer.createNewAgent("supplier2", SupplierAgent.class.getCanonicalName(), components2);
+			supplierAgent2.start(); 
 			
 			
 			
-			AgentController customerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(), components);
+			AgentController customerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(), null);
 			customerAgent.start();
 
 			AgentController syncTicker = myContainer.createNewAgent("sync", SyncTicker.class.getCanonicalName(), null);
