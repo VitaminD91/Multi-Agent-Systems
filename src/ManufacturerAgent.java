@@ -84,6 +84,7 @@ public class ManufacturerAgent extends Agent {
 
 	// Creates and array list of agent IDs for suppliers
 	private ArrayList<AID> suppliers = new ArrayList<>();
+	private ArrayList<AID> customers = new ArrayList<>();
 	// Creates an array list of components to buy
 	private ArrayList<String> componentsToBuy = new ArrayList<>();
 	private AID tickerAgent;
@@ -191,10 +192,6 @@ public class ManufacturerAgent extends Agent {
 			if (msg != null) {
 				try {
 					ContentElement ce = null;
-
-					// let JADE convert from String to Java objects
-					// Output will be a ContentElement
-
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof SupplierResponseOwns) {
 						List<ComponentOntology> newDelivery = ((SupplierResponseOwns) ce).getComponentList();
@@ -217,7 +214,7 @@ public class ManufacturerAgent extends Agent {
 					oe.printStackTrace();
 				}
 			} else {
-				// block();
+				block();
 			}
 		}
 
@@ -233,6 +230,7 @@ public class ManufacturerAgent extends Agent {
 		}
 
 	}
+	
 
 	public class CollectOrders extends OneShotBehaviour {
 
@@ -258,12 +256,8 @@ public class ManufacturerAgent extends Agent {
 			if (msg != null) {
 				System.out.println(msg.getOntology());
 				try {
-					System.out.println("Order Received! " + msg);
 
 					ContentElement ce = null;
-
-					// let JADE convert from String to Java objects
-					// Output will be a ContentElement
 
 					ce = getContentManager().extractContent(msg);
 					if (ce instanceof ManufacturerOwns) {
@@ -345,6 +339,7 @@ public class ManufacturerAgent extends Agent {
 
 		}
 	}
+	
 
 	public class FindSuppliers extends OneShotBehaviour {
 
@@ -413,19 +408,16 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			System.out.println("Manufacturer Profit Updated!: £" + totalProfit);
+			double perItemCost = 5.0;
+			int warehouseStock = Warehouse.size();
+			double warehouseCost = warehouseStock * perItemCost;
+			System.out.println("Daily Warehouse Stock Cost: £" + warehouseCost);
+			System.out.println("Manufacturer Profit Updated!: £" + (totalProfit - warehouseCost));
 			
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
-			// Send a message to each supplier that we have finished
-			ACLMessage supplierDone = new ACLMessage(ACLMessage.INFORM);
-			supplierDone.setContent("done");
-			for (AID supplier : suppliers) {
-				supplierDone.addReceiver(supplier);
-			}
-			myAgent.send(supplierDone);
 			myAgent.removeBehaviour(this);
 		}
 

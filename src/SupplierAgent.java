@@ -53,11 +53,13 @@ public class SupplierAgent extends Agent {
 	// REFERENCES TICKER AGENT ID
 	private AID tickerAgent;
 	private AID ManufacturerAID;
+	private ComponentOntology[] componentsForSale;
 
 	//i DON'T LIKE THIS
 	@Override
 	protected void setup() {
 
+		componentsForSale = (ComponentOntology[]) getArguments();
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		getContentManager().registerOntology(ManufacturerOntology.getInstance());
@@ -133,6 +135,29 @@ public class SupplierAgent extends Agent {
 						ScreenOntology requiredScreen = device.getScreen();
 						StorageOntology requiredStorage = device.getStorage();
 						MemoryOntology requiredMemory = device.getMemory();
+						
+						for (ComponentOntology c : componentsForSale) {
+							if (c instanceof BatteryOntology
+									&& ((BatteryOntology) c).getCapacity() == requiredBattery.getCapacity()) {
+								requiredBattery.setPrice(c.getPrice());
+								requiredBattery.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof ScreenOntology
+									&& ((ScreenOntology) c).getSize() == requiredScreen.getSize()) {
+								requiredScreen.setPrice(c.getPrice());
+								requiredScreen.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof StorageOntology
+									&& ((StorageOntology) c).getCapacity() == requiredStorage.getCapacity()) {
+								requiredStorage.setPrice(c.getPrice());
+								requiredStorage.setDeliveryTime(c.getDeliveryTime());
+							}
+							if (c instanceof MemoryOntology
+									&& ((MemoryOntology) c).getCapacity() == requiredMemory.getCapacity()) {
+								requiredMemory.setPrice(c.getPrice());
+								requiredMemory.setDeliveryTime(c.getDeliveryTime());
+							}
+						}
 						
 						List<ComponentOntology> componentOrder = new ArrayList();
 						
