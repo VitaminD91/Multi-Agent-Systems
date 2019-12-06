@@ -1,3 +1,9 @@
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,9 +45,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 //*******************************WHAT I WANT THIS TO DO************************************//
-// Receives order from Customers
-
-// Checks Warehouse Parts, Time available and Late Fees
 
 // Decides which orders to accept
 
@@ -93,7 +96,6 @@ public class ManufacturerAgent extends Agent {
 	private int numQueriesSent;
 	private List<OrderOntology> collectedOrders = new ArrayList<OrderOntology>();
 	private List<ComponentOntology> collectedDelivery;
-
 	private HashMap<String, Integer> Warehouse = new HashMap<String, Integer>();
 
 	private Codec codec = new SLCodec();
@@ -249,7 +251,25 @@ public class ManufacturerAgent extends Agent {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			
+			//Get all customers
+			DFAgentDescription customerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("customer");
+			customerTemplate.addServices(sd);
+			try {
+				suppliers.clear();
+				DFAgentDescription[] agentsType1 = DFService.search(myAgent, customerTemplate);
+				for (int i = 0; i < agentsType1.length; i++) {
+					customers.add(agentsType1[i].getName());
+				}
+				System.out.println("Number of customers: " + agentsType1.length);
+			} catch (FIPAException e) {
+				e.printStackTrace();
+			}
+		
+			
+			//Receive order from Customer
 			MessageTemplate mt = MessageTemplate.MatchOntology(CustomerOntology.getInstance().getName());
 			ACLMessage msg = receive(mt);
 
@@ -264,8 +284,8 @@ public class ManufacturerAgent extends Agent {
 						OrderOntology order = ((ManufacturerOwns) ce).getOrder();
 						System.out.println(getName() + " received order: " + order);
 						collectedOrders.add(order);
-
 					}
+					
 				} catch (CodecException ce) {
 					ce.printStackTrace();
 				} catch (OntologyException oe) {
@@ -273,8 +293,8 @@ public class ManufacturerAgent extends Agent {
 				}
 			} else {
 				 block();
-
 			}
+			
 		}
 	}
 
@@ -408,11 +428,21 @@ public class ManufacturerAgent extends Agent {
 
 		@Override
 		public void action() {
-			double perItemCost = 5.0;
+			double perItemCost =5.0;
 			int warehouseStock = Warehouse.size();
 			double warehouseCost = warehouseStock * perItemCost;
+			double finalProfit = totalProfit - warehouseCost;
 			System.out.println("Daily Warehouse Stock Cost: £" + warehouseCost);
-			System.out.println("Manufacturer Profit Updated!: £" + (totalProfit - warehouseCost));
+			System.out.println("Manufacturer Profit Updated!: £" + (finalProfit));
+			try{
+				  FileWriter fstream = new FileWriter("./totals.txt",true);
+				  BufferedWriter out = new BufferedWriter(fstream);
+				  out.write("Line Added On: " + finalProfit +",");
+				  out.close();
+			  }catch (Exception e){
+				 System.err.println("Error while writing to file: " +
+			          e.getMessage());
+			  }
 			
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);

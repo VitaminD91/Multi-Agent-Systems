@@ -46,7 +46,7 @@ public class MainContainer {
 			AgentController supplierAgent2 = myContainer.createNewAgent("supplier2", SupplierAgent.class.getCanonicalName(), components2);
 			supplierAgent2.start(); 
 			
-			int numberOfCustomers = 1;
+			int numberOfCustomers = 3;
 			
 			for(int i = 1; i < (numberOfCustomers + 1); i++) {
 				AgentController customerAgent = myContainer.createNewAgent("customer" + i, CustomerAgent.class.getCanonicalName(), null);
